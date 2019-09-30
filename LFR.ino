@@ -15,7 +15,7 @@ uint16_t sensorValues[SensorCount];
 int leftValue=0;
 int rightValue=0;
 int midVal=0;
-int action;                                                 // 0 means no line, 1 means left side, 2 means right side, 3 means T, 4 means cross, 5 means staright, 6 means 2 lines together
+int action;                                                 
 uint16_t position;
 
 void setup()
@@ -58,16 +58,10 @@ void dryRun(){
         break;
       case 1:
         turnLeft();
-        pathStore('L');
+        //pathStore('L');
         break;
-      case 2:
-        if (readSensor()==0){
-          turnRight();
-          pathStore('R');
-        }
-        else
-          moveInchFor();
-          pathStore('S');
+      case 2
+        turnRight();
         break;
       case 3:
         turnLeft();
@@ -78,13 +72,20 @@ void dryRun(){
         pathStore('L');
         break;
       case 5:
-        goStraight;
-        pathStore('S');
+        moveInchFor();
         break;
       case 6:
         moveInchFor();
         Stop();
         flag=0;
+        break;
+      case 7:
+        moveInchFor();
+        pathStore('S');
+        break;
+      case 8:
+        turnLeft();
+        pathStore('L');
         break;
     }
   }
@@ -96,31 +97,38 @@ int readSensor(){
   for(int i=0;i<SensorCount;++i){
     sensorValues[i]=map(sensorValues[i], 0, 1023, 0, 1);
   }
-  midVal=sensorValues[SensorCount/2]+sensorValues[SensorCount/2+1];
+  midVal=sensorValues[SensorCount/2] || sensorValues[SensorCount/2+1];
   for(int i=0;i<SensorCount/2-1;++i){
-    leftVal+=sessorValues[i];
-    rightVal+=sensorValues[SensorCount-i];
+    leftVal=leftVal || sessorValues[i];
+    rightVal= rightVal || sensorValues[SensorCount-i];
   }
-  if(leftVal==0 && rightVal==0 && midVal==0){
+  if(leftVal==0 && rightVal==0 && midVal==0){                                  //Dead-End
     action=0;
   }
-  if(leftVal==1 && rightVal==0){
+  if(leftVal==1 && rightVal==0 && readSensor()==0){                            //Left Only
     action=1;
   }
-  if(leftVal==0 && rightVal==1){
+  if(leftVal==1 && rightVal==0 && readSensor()==5){                            //Left and Straight
+    action=8;
+  }
+  if(leftVal==0 && rightVal==1 && readSensor()==0){                           //Right Only
     action=2;
   }
-  if(leftVal==0 && rightVal==0 && midVal==1){
+  if(leftVal==0 && rightVal==1 && readSensor()==5){                           //Right and Straight 
+    action=7;
+  }
+  if(leftVal==0 && rightVal==0 && midVal==1){                                //Straight
     action=5;
   }
-  if(leftVal==1 && rightVal==1 && midVal==1 && readSensor()==0){
+  if(leftVal==1 && rightVal==1 && midVal==1 && readSensor()==0){            //T
     action=3;
   }else
-  if(leftVal==1 && rightVal==1 && midVal==1 && readSensor()==5){
+  if(leftVal==1 && rightVal==1 && midVal==1 && readSensor()==5){            //cross
     action=4;
   }
   else
-    acion=6;
+    if(leftVal==1 && rightVal==1 && (readSensor()==5))                      //END
+      acion=6;                                                              
   return action;
 }
 
@@ -135,12 +143,12 @@ void PIDcontrol(){
 
 void pathStore(char x){
   path[pathLen++]= x;
-  if(pathLength < 3 || path[pathLength-2] != 'B')
+  if(pathLen < 3 || path[pathLen-2] != 'B')
     return;
 
   int totalAngle = 0;
   int i;
-  for(i=1;i<=3;i++)
+  for(i=0;i<3;i++)
   {
     switch(path[pathLen-i])
     {
@@ -159,34 +167,58 @@ void pathStore(char x){
   switch(totalAngle)
   {
     case 0:
-      path[pathLength - 3] = 'S';
+      path[pathLen - 3] = 'S';
       break;
     case 90:
-      path[pathLength - 3] = 'R';
+      path[pathLen - 3] = 'R';
       break;
     case 180:
-      path[pathLength - 3] = 'B';
+      path[pathLen - 3] = 'B';
       break;
     case 270:
-      path[pathLength - 3] = 'L';
+      path[pathLen - 3] = 'L';
       break;
   }
   pathLength -= 2;
 }
 void actualRun(){
-  for(int i=0;i=<pathLen;i++){
-    switch(path[i]){
-      case 'R':
+  int var=0;
+  while(flag){  
+    switch(readSensor()){
+      case 1:
+        turnLeft();
+        //pathStore('L');
+        break;
+      case 2:
         turnRight();
         break;
-      case 'L':
-        turnleft();
+      case 3:
+      case 4:
+      case 7:
+      case 8:
+         switch(path[i]){
+          case 'R':
+            turnRight();
+            break;
+          case 'L':
+            turnleft();
+            break;
+          case 'B':
+            turnBack();
+            break;
+          case 'S':
+            moveInchfor();
+            break;
+        }
         break;
-      case 'B':
-        turnBack();
+      case 5:
+        goStraight();
         break;
-      case 'S':
-        moveInchfor();
+      case 6:
+        moveInchFor();
+        Stop();
+        flag=0;
+        break;
     }
   }
 }

@@ -196,7 +196,7 @@ void actualRun(){
       case 4:
       case 7:
       case 8:
-         switch(path[i]){
+         switch(path[var++]){
           case 'R':
             turnRight();
             break;

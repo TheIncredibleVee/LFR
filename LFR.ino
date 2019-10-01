@@ -179,7 +179,7 @@ void pathStore(char x){
       path[pathLen - 3] = 'L';
       break;
   }
-  pathLength -= 2;
+  pathLen -= 2;
 }
 void actualRun(){
   int var=0;

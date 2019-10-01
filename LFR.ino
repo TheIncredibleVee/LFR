@@ -183,6 +183,7 @@ void pathStore(char x){
 }
 void actualRun(){
   int var=0;
+  flag=1;
   while(flag){  
     switch(readSensor()){
       case 1:

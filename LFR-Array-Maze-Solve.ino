@@ -125,6 +125,8 @@ int readSensors(){
                 action=0;
                 break;
         }
+    return action
+
 }
 
 void leftTurn(){
